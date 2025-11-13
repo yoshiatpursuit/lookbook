@@ -140,7 +140,7 @@ const ProfileCard = ({ prof, onClick }) => {
         className="rounded-xl border-0 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden relative person-card"
         style={{
           backgroundColor: 'white', 
-          height: '380px',
+          aspectRatio: '3/4',
           borderRadius: '0.75rem'
         }}
         onClick={onClick}
@@ -322,7 +322,7 @@ const ProjectCard = ({ proj, onClick }) => {
     >
       <Card 
         className="rounded-xl border-0 shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden relative project-card"
-        style={{backgroundColor: 'white', height: '380px'}}
+        style={{backgroundColor: 'white', aspectRatio: '3/4'}}
         onClick={onClick}
       >
         {/* Background Image or Color */}
@@ -1008,7 +1008,7 @@ function PersonDetailPage() {
   const initials = person?.name?.split(' ').map(n => n.charAt(0)).join('') || project?.title?.charAt(0) || '?';
 
   return (
-    <div className="flex min-h-screen" style={{backgroundColor: '#e3e3e3'}}>
+    <div className="flex" style={{backgroundColor: '#e3e3e3', overflow: 'visible', minHeight: '100vh'}}>
       {/* Logo - Top Left - Fixed */}
       <div className="fixed left-2 md:left-4 top-2 md:top-4 z-50">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
@@ -1031,25 +1031,92 @@ function PersonDetailPage() {
       </button>
 
       {/* Search Bar and View Icons - Scrolls with content */}
-      <div className="absolute top-2 md:top-4 z-40 left-2 right-14 sm:right-2 sm:left-[280px] lg:left-[272px] md:right-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-3">
-          {/* Page indicator */}
-          {layoutView === 'grid' && (
-            <div className="text-sm md:text-base font-semibold text-gray-700 hidden sm:block">
-              Page {gridPage + 1} of {Math.ceil((viewMode === 'people' ? totalProfiles : totalProjects) / 8)}
-            </div>
-          )}
-          {layoutView === 'detail' && currentLength > 0 && currentIndex >= 0 && (
-            <div className="text-sm md:text-base font-semibold text-gray-700 hidden sm:block">
-              {currentIndex + 1} of {currentLength}
-            </div>
-          )}
-          {layoutView === 'list' && (
-            <div className="text-sm md:text-base font-semibold text-gray-700 hidden sm:block">
-              {viewMode === 'people' ? filteredProfiles.length : filteredProjects.length} {viewMode === 'people' ? 'People' : 'Projects'}
-            </div>
-          )}
+      <div className="absolute top-2 md:top-4 z-40 left-2 right-2 sm:right-2 sm:left-[268px] lg:left-[268px] md:right-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-3" style={{marginLeft: 0, marginRight: 0, paddingLeft: '3.5rem', paddingRight: '3.5rem', width: '100%'}}>
+          {/* Left side: Pagination controls - aligned with cards */}
+          <div className="flex items-center gap-2 sm:gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
+            {/* Page indicator with navigation - left-aligned */}
+            {layoutView === 'grid' && (
+              <>
+                {viewMode === 'projects' && Math.ceil(totalProjects / 8) > 1 && (
+                  <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                    <button
+                      onClick={() => setGridPage(Math.max(0, gridPage - 1))}
+                      disabled={gridPage === 0}
+                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="text-sm md:text-base font-semibold text-gray-700">
+                      Page {gridPage + 1} of {Math.ceil(totalProjects / 8)}
+                    </div>
+                    <button
+                      onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
+                      disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
+                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+                {viewMode === 'people' && Math.ceil(totalProfiles / 8) > 1 && (
+                  <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                    <button
+                      onClick={() => setGridPage(Math.max(0, gridPage - 1))}
+                      disabled={gridPage === 0}
+                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="text-sm md:text-base font-semibold text-gray-700">
+                      Page {gridPage + 1} of {Math.ceil(totalProfiles / 8)}
+                    </div>
+                    <button
+                      onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
+                      disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
+                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+            {layoutView === 'list' && (
+              <div className="text-sm md:text-base font-semibold text-gray-700 hidden sm:block">
+                {viewMode === 'people' ? filteredProfiles.length : filteredProjects.length} {viewMode === 'people' ? 'People' : 'Projects'}
+              </div>
+            )}
+            {layoutView === 'detail' && currentLength > 1 && (
+              <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                <button
+                  onClick={handlePrevious}
+                  disabled={!canGoPrevious}
+                  className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="text-sm md:text-base font-semibold text-gray-700">
+                  {currentIndex + 1} / {currentLength}
+                </div>
+                <button
+                  onClick={handleNext}
+                  disabled={!canGoNext}
+                  className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
           
+          {/* Right side: Search and View Icons */}
           <div className="flex items-center gap-2 sm:gap-3 ml-auto w-full sm:w-auto justify-end">
           {layoutView === 'grid' && (
           <Input
@@ -1062,11 +1129,11 @@ function PersonDetailPage() {
                   setProjectFilters({ ...projectFilters, search: e.target.value });
                 }
               }}
-            className="w-32 sm:w-48 md:w-64 bg-white text-sm"
+            className="w-32 sm:w-48 md:w-64 h-10 bg-white text-sm"
           />
           )}
           {/* View Toggle Icons */}
-          <div className="flex items-center gap-1 bg-white rounded-md border p-1">
+          <div className="flex items-center gap-1 bg-white rounded-md border p-1 h-10">
             <button 
               className="p-1.5 md:p-2 rounded hover:bg-gray-100"
               style={{backgroundColor: layoutView === 'grid' ? '#4242ea' : 'transparent', color: layoutView === 'grid' ? 'white' : 'black'}}
@@ -1124,11 +1191,11 @@ function PersonDetailPage() {
       <div className={`fixed left-0 sm:left-4 top-0 sm:top-20 z-50 transition-transform duration-300 ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'
       } sm:block`}>
-        <aside style={{backgroundColor: '#e3e3e3'}} className="w-72 sm:w-60 h-screen sm:h-auto sm:rounded-xl overflow-y-auto border-r-2 sm:border-2 border-white sm:max-h-[calc(100vh-10rem)] pt-14 sm:pt-0 pb-20 sm:pb-0">
+        <aside style={{backgroundColor: '#e3e3e3'}} className="w-72 sm:w-60 h-screen sm:h-auto sm:rounded-xl overflow-y-auto border-r-2 sm:border-2 border-white sm:max-h-[calc(100vh-10rem)] pt-14 sm:pt-4 pb-20 sm:pb-0">
           <div className="flex flex-col h-full">
 
           {/* Filter Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-0">
               {/* Tabs */}
               <div className="flex gap-1 border-b">
                 <button
@@ -1356,46 +1423,19 @@ function PersonDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 mt-16 sm:mt-20 mx-2 sm:ml-[260px] lg:ml-[260px] sm:mr-8 lg:mr-16">
-        <div className="max-w-7xl mx-auto relative">
+      <div className="flex-1 mt-16 sm:mt-20 mx-2 sm:ml-[260px] lg:ml-[260px] sm:mr-2 lg:mr-2" style={{overflow: 'visible', minHeight: 'auto'}}>
+        <div className="relative pt-0" style={{marginLeft: 0, marginRight: 0, paddingLeft: '3.5rem', paddingRight: '3.5rem', width: '100%', overflow: 'visible', minHeight: 'auto'}}>
           
           {/* Grid View */}
           {layoutView === 'grid' && viewMode === 'projects' && (
             <>
-              {/* Grid Navigation Arrows - Hidden on mobile */}
-              <div className="hidden md:block sticky top-1/2 -translate-y-1/2 left-0 right-0 h-0 pointer-events-none z-50">
-                <button
-                  onClick={() => setGridPage(Math.max(0, gridPage - 1))}
-                  disabled={gridPage === 0}
-                  className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-                  style={{left: '-70px'}}
-                  aria-label="Previous page"
-                >
-                  <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                    <ChevronLeft className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-xs text-gray-500">Previous</span>
-                </button>
-
-                <button
-                  onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
-                  disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
-                  className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-                  style={{right: '-70px'}}
-                  aria-label="Next page"
-                >
-                  <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                    <ChevronRight className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-xs text-gray-500">Next</span>
-                </button>
-              </div>
-
               <div 
                 key={`projects-grid-${gridPage}`}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-2 gap-6 md:mb-0 mb-20" 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] md:mb-0 mb-20" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
+                gridAutoRows: 'auto',
+                overflow: 'visible'
                 }}
               >
               <style>{`
@@ -1428,7 +1468,7 @@ function PersonDetailPage() {
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
-                className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
@@ -1436,7 +1476,6 @@ function PersonDetailPage() {
                 >
                   <ChevronLeft className="w-5 h-5" style={{color: gridPage > 0 ? 'white' : '#9ca3af'}} />
                 </div>
-                <span className="text-sm" style={{color: gridPage > 0 ? '#4242ea' : '#9ca3af'}}>Previous</span>
               </button>
               
               <div className="text-sm font-semibold text-gray-700">
@@ -1446,9 +1485,8 @@ function PersonDetailPage() {
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
-                className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <span className="text-sm" style={{color: gridPage < Math.ceil(totalProjects / 8) - 1 ? '#4242ea' : '#9ca3af'}}>Next</span>
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
                   style={{backgroundColor: gridPage < Math.ceil(totalProjects / 8) - 1 ? '#4242ea' : '#e5e7eb'}}
@@ -1464,40 +1502,13 @@ function PersonDetailPage() {
           {/* People Grid View */}
           {layoutView === 'grid' && viewMode === 'people' && (
             <>
-              {/* Grid Navigation Arrows - Hidden on mobile */}
-              <div className="hidden md:block sticky top-1/2 -translate-y-1/2 left-0 right-0 h-0 pointer-events-none z-50">
-                <button
-                  onClick={() => setGridPage(Math.max(0, gridPage - 1))}
-                  disabled={gridPage === 0}
-                  className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-                  style={{left: '-70px'}}
-                  aria-label="Previous page"
-                >
-                  <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                    <ChevronLeft className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-xs text-gray-500">Previous</span>
-                </button>
-
-                <button
-                  onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
-                  disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
-                  className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-                  style={{right: '-70px'}}
-                  aria-label="Next page"
-                >
-                  <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                    <ChevronRight className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-xs text-gray-500">Next</span>
-                </button>
-              </div>
-
               <div 
                 key={`people-grid-${gridPage}`}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 grid-rows-2 gap-6 md:mb-0 mb-20" 
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] md:mb-0 mb-20" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
+                gridAutoRows: 'auto',
+                overflow: 'visible'
                 }}
               >
               <style>{`
@@ -1530,7 +1541,7 @@ function PersonDetailPage() {
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
-                className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
@@ -1538,7 +1549,6 @@ function PersonDetailPage() {
                 >
                   <ChevronLeft className="w-5 h-5" style={{color: gridPage > 0 ? 'white' : '#9ca3af'}} />
                 </div>
-                <span className="text-sm" style={{color: gridPage > 0 ? '#4242ea' : '#9ca3af'}}>Previous</span>
               </button>
               
               <div className="text-sm font-semibold text-gray-700">
@@ -1548,9 +1558,8 @@ function PersonDetailPage() {
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
-                className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <span className="text-sm" style={{color: gridPage < Math.ceil(totalProfiles / 8) - 1 ? '#4242ea' : '#9ca3af'}}>Next</span>
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
                   style={{backgroundColor: gridPage < Math.ceil(totalProfiles / 8) - 1 ? '#4242ea' : '#e5e7eb'}}
@@ -1770,42 +1779,13 @@ function PersonDetailPage() {
           {/* Detail View */}
           {layoutView === 'detail' && (
             <>
-          {/* Navigation Arrows - fixed vertically, positioned relative to card horizontally - Hidden on mobile */}
-          <div className="hidden md:block sticky top-1/2 -translate-y-1/2 left-0 right-0 h-0 pointer-events-none z-50">
-            <button
-              onClick={handlePrevious}
-              disabled={!canGoPrevious}
-              className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-              style={{left: '-70px'}}
-              aria-label="Previous profile"
-            >
-              <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xs text-gray-500">Previous</span>
-            </button>
-
-            <button
-              onClick={handleNext}
-              disabled={!canGoNext}
-              className="absolute flex flex-col items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
-              style={{right: '-70px'}}
-              aria-label="Next profile"
-            >
-              <div className="rounded-full p-3 shadow-lg transition-all hover:scale-110 disabled:hover:scale-100" style={{backgroundColor: '#4242ea'}}>
-                <ChevronRight className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xs text-gray-500">Next</span>
-            </button>
-          </div>
-
           {/* Mobile Navigation - Bottom Fixed */}
           {currentLength > 1 && (
           <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
             <button
               onClick={handlePrevious}
               disabled={!canGoPrevious}
-              className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
@@ -1813,7 +1793,6 @@ function PersonDetailPage() {
               >
                 <ChevronLeft className="w-5 h-5" style={{color: canGoPrevious ? 'white' : '#9ca3af'}} />
               </div>
-              <span className="text-sm" style={{color: canGoPrevious ? '#4242ea' : '#9ca3af'}}>Previous</span>
             </button>
             
             <div className="text-sm font-semibold text-gray-700">
@@ -1823,9 +1802,8 @@ function PersonDetailPage() {
             <button
               onClick={handleNext}
               disabled={!canGoNext}
-              className="flex items-center gap-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <span className="text-sm" style={{color: canGoNext ? '#4242ea' : '#9ca3af'}}>Next</span>
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
                 style={{backgroundColor: canGoNext ? '#4242ea' : '#e5e7eb'}}

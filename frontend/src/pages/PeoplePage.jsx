@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { profilesAPI } from '../utils/api';
 import PersonCard from '../components/PersonCard';
 import FilterBar from '../components/FilterBar';
@@ -144,33 +145,35 @@ function PeoplePage() {
             </p>
           </div>
 
+          {pagination.total > pagination.limit && (
+            <div className="pagination pagination--top">
+              <button
+                className="pagination__button"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                disabled={pagination.page === 1}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="pagination__icon" />
+              </button>
+              <span className="pagination__page-number">
+                {pagination.page}
+              </span>
+              <button
+                className="pagination__button"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
+                aria-label="Next page"
+              >
+                <ChevronRight className="pagination__icon" />
+              </button>
+            </div>
+          )}
+
           <div className="people-grid">
             {profiles.map(profile => (
               <PersonCard key={profile.slug} person={profile} />
             ))}
           </div>
-
-          {pagination.total > pagination.limit && (
-            <div className="pagination">
-              <button
-                className="btn btn--outline"
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                disabled={pagination.page === 1}
-              >
-                Previous
-              </button>
-              <span className="pagination__info">
-                Page {pagination.page} of {Math.ceil(pagination.total / pagination.limit)}
-              </span>
-              <button
-                className="btn btn--outline"
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit)}
-              >
-                Next
-              </button>
-            </div>
-          )}
         </>
       )}
     </div>

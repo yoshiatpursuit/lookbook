@@ -21,10 +21,49 @@
 
 .pagination {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  gap: var(--spacing-sm);
+  justify-content: flex-start;
+}
+
+.pagination--top {
+  margin-bottom: var(--spacing-lg);
+}
+
+.pagination__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-text);
+}
+
+.pagination__button:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+  border-color: var(--color-primary);
+}
+
+.pagination__button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination__icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.pagination__page-number {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  min-width: 2rem;
+  text-align: center;
 }
 
 .pagination__info {
