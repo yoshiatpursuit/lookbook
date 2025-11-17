@@ -439,3 +439,15 @@
   mix-blend-mode: screen;
 }
 
+/* Custom cursor for profile cards - circular arrow button */
+.person-card-cursor,
+.person-card-cursor * {
+  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white'/%3E%3Cpath d='M13 8L21 16L13 24' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 16 16, pointer !important;
+}
+
+/* Custom cursor for project cards - circular arrow button */
+.project-card-cursor,
+.project-card-cursor * {
+  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white'/%3E%3Cpath d='M13 8L21 16L13 24' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 16 16, pointer !important;
+}
+

@@ -127,11 +127,10 @@ const ProfileCard = ({ prof, onClick }) => {
   return (
     <div 
       ref={setCardRef}
-      className={`rounded-xl person-card-wrapper ${isFeatured ? 'featured' : ''}`}
+      className={`rounded-xl person-card-wrapper ${isFeatured ? 'featured' : ''} person-card-cursor`}
       style={{
         transformStyle: 'preserve-3d',
-        WebkitTransformStyle: 'preserve-3d',
-        cursor: 'pointer'
+        WebkitTransformStyle: 'preserve-3d'
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -186,7 +185,7 @@ const ProfileCard = ({ prof, onClick }) => {
       <CardContent className="relative z-10 p-6 h-full flex flex-col justify-between">
         {/* Top Section - Name and Title Only */}
         <div>
-          <h3 className="font-bold text-white uppercase mb-2" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem'}}>{prof.name}</h3>
+          <h3 className="font-bold text-white uppercase mb-2 leading-none" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem'}}>{prof.name}</h3>
           {prof.title && (
             <p className="text-white mb-2" style={{fontSize: '14px', fontWeight: '500', textShadow: '0 1px 2px rgba(0,0,0,0.5)'}}>{prof.title}</p>
           )}
@@ -226,13 +225,6 @@ const ProfileCard = ({ prof, onClick }) => {
                   {industry}
                 </span>
               ))}
-            </div>
-            
-            {/* Arrow Button */}
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-              <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-              </svg>
             </div>
           </div>
         </div>
@@ -311,11 +303,10 @@ const ProjectCard = ({ proj, onClick }) => {
   return (
     <div 
       ref={setCardRef}
-      className={`rounded-xl project-card-wrapper ${isFeatured ? 'featured' : ''}`}
+      className={`rounded-xl project-card-wrapper ${isFeatured ? 'featured' : ''} project-card-cursor`}
       style={{
         transformStyle: 'preserve-3d',
-        WebkitTransformStyle: 'preserve-3d',
-        cursor: 'pointer'
+        WebkitTransformStyle: 'preserve-3d'
       }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -419,7 +410,7 @@ const ProjectCard = ({ proj, onClick }) => {
           
           {/* Top Section - Title and Description */}
           <div>
-            <h3 className="font-bold text-white uppercase mb-3 leading-tight" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem'}}>{proj.title}</h3>
+            <h3 className="font-bold text-white uppercase mb-3 leading-none" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem'}}>{proj.title}</h3>
             {proj.short_description && (
               <p className="text-white leading-snug mb-2" style={{fontSize: '14px', textShadow: '0 1px 2px rgba(0,0,0,0.5)'}}>{proj.short_description}</p>
             )}
@@ -481,7 +472,7 @@ const ProjectCard = ({ proj, onClick }) => {
               </div>
             </div>
             
-            {/* Category Badge and Arrow */}
+            {/* Category Badge */}
             <div className="flex items-center justify-between">
               <div className="flex flex-wrap gap-1">
               {proj.sectors && proj.sectors.length > 0 ? (
@@ -498,13 +489,6 @@ const ProjectCard = ({ proj, onClick }) => {
                   ))
                 ) : null}
                 </div>
-              
-              {/* Arrow Button */}
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
             </div>
           </div>
         </CardContent>
@@ -1017,29 +1001,29 @@ function PersonDetailPage() {
             alt="Pursuit" 
             className="h-6 md:h-8"
           />
-          <span className="text-sm md:text-base hidden sm:inline">Lookbook</span>
+          <span className="text-sm lg:text-base hidden lg:inline">Lookbook</span>
         </a>
       </div>
 
       {/* Mobile Menu Button - Top Right - Fixed */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="sm:hidden fixed right-2 top-2 z-50 bg-white rounded-lg p-2 shadow-md border border-gray-200"
+        className="lg:hidden fixed right-2 top-2 z-50 bg-white rounded-md border border-gray-200 h-10 w-10 flex items-center justify-center shadow-md"
         aria-label="Toggle menu"
       >
         {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
       {/* Search Bar and View Icons - Scrolls with content */}
-      <div className="absolute top-2 md:top-4 z-40 left-2 right-2 sm:right-2 sm:left-[268px] lg:left-[268px] md:right-2">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 sm:gap-3" style={{marginLeft: 0, marginRight: 0, paddingLeft: '3.5rem', paddingRight: '3.5rem', width: '100%'}}>
+      <div className="absolute top-2 lg:top-4 z-40 left-2 right-12 lg:right-2 lg:left-[268px]">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-2 lg:gap-3" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%'}}>
           {/* Left side: Pagination controls - aligned with cards */}
-          <div className="flex items-center gap-2 sm:gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
+          <div className="flex items-center gap-2 lg:gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
             {/* Page indicator with navigation - left-aligned */}
             {layoutView === 'grid' && (
               <>
                 {viewMode === 'projects' && Math.ceil(totalProjects / 8) > 1 && (
-                  <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                  <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
                     <button
                       onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                       disabled={gridPage === 0}
@@ -1048,7 +1032,7 @@ function PersonDetailPage() {
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <div className="text-sm md:text-base font-semibold text-gray-700">
+                    <div className="text-sm lg:text-base font-semibold text-gray-700">
                       Page {gridPage + 1} of {Math.ceil(totalProjects / 8)}
                     </div>
                     <button
@@ -1062,7 +1046,7 @@ function PersonDetailPage() {
                   </div>
                 )}
                 {viewMode === 'people' && Math.ceil(totalProfiles / 8) > 1 && (
-                  <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                  <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
                     <button
                       onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                       disabled={gridPage === 0}
@@ -1071,7 +1055,7 @@ function PersonDetailPage() {
                     >
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <div className="text-sm md:text-base font-semibold text-gray-700">
+                    <div className="text-sm lg:text-base font-semibold text-gray-700">
                       Page {gridPage + 1} of {Math.ceil(totalProfiles / 8)}
                     </div>
                     <button
@@ -1087,12 +1071,12 @@ function PersonDetailPage() {
               </>
             )}
             {layoutView === 'list' && (
-              <div className="text-sm md:text-base font-semibold text-gray-700 hidden sm:block">
+              <div className="text-sm lg:text-base font-semibold text-gray-700 hidden lg:block">
                 {viewMode === 'people' ? filteredProfiles.length : filteredProjects.length} {viewMode === 'people' ? 'People' : 'Projects'}
               </div>
             )}
             {layoutView === 'detail' && currentLength > 1 && (
-              <div className="flex items-center gap-3 hidden sm:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+              <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
                 <button
                   onClick={handlePrevious}
                   disabled={!canGoPrevious}
@@ -1101,7 +1085,7 @@ function PersonDetailPage() {
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <div className="text-sm md:text-base font-semibold text-gray-700">
+                <div className="text-sm lg:text-base font-semibold text-gray-700">
                   {currentIndex + 1} / {currentLength}
                 </div>
                 <button
@@ -1117,7 +1101,7 @@ function PersonDetailPage() {
           </div>
           
           {/* Right side: Search and View Icons */}
-          <div className="flex items-center gap-2 sm:gap-3 ml-auto w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 lg:gap-3 ml-auto w-full lg:w-auto justify-end">
           {layoutView === 'grid' && (
           <Input
               placeholder={viewMode === 'people' ? 'Search People' : 'Search Projects'}
@@ -1129,13 +1113,13 @@ function PersonDetailPage() {
                   setProjectFilters({ ...projectFilters, search: e.target.value });
                 }
               }}
-            className="w-32 sm:w-48 md:w-64 h-10 bg-white text-sm"
+            className="w-32 lg:w-48 xl:w-64 h-10 bg-white text-sm"
           />
           )}
           {/* View Toggle Icons */}
           <div className="flex items-center gap-1 bg-white rounded-md border p-1 h-10">
             <button 
-              className="p-1.5 md:p-2 rounded hover:bg-gray-100"
+              className="p-1.5 lg:p-2 rounded hover:bg-gray-100"
               style={{backgroundColor: layoutView === 'grid' ? '#4242ea' : 'transparent', color: layoutView === 'grid' ? 'white' : 'black'}}
               onClick={() => {
                 setLayoutView('grid');
@@ -1147,10 +1131,10 @@ function PersonDetailPage() {
                 }
               }}
             >
-              <Grid3x3 className="w-3 h-3 md:w-4 md:h-4" />
+              <Grid3x3 className="w-3 h-3 lg:w-4 lg:h-4" />
             </button>
             <button 
-              className="p-1.5 md:p-2 rounded" 
+              className="p-1.5 lg:p-2 rounded" 
               style={{backgroundColor: layoutView === 'detail' ? '#4242ea' : 'transparent', color: layoutView === 'detail' ? 'white' : 'black'}}
               onClick={() => {
                 // When switching to detail view, navigate to first item if no slug
@@ -1165,10 +1149,10 @@ function PersonDetailPage() {
                 }
               }}
             >
-              <Square className="w-3 h-3 md:w-4 md:h-4" />
+              <Square className="w-3 h-3 lg:w-4 lg:h-4" />
             </button>
             <button 
-              className="hidden md:inline-flex p-1.5 md:p-2 rounded hover:bg-gray-100"
+              className="hidden lg:inline-flex p-1.5 lg:p-2 rounded hover:bg-gray-100"
               style={{backgroundColor: layoutView === 'list' ? '#4242ea' : 'transparent', color: layoutView === 'list' ? 'white' : 'black'}}
               onClick={() => setLayoutView('list')}
             >
@@ -1182,16 +1166,16 @@ function PersonDetailPage() {
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div 
-          className="sm:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* Left Sidebar - Floating - Slides in on mobile, always visible on desktop */}
-      <div className={`fixed left-0 sm:left-4 top-0 sm:top-20 z-50 transition-transform duration-300 ${
-        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'
-      } sm:block`}>
-        <aside style={{backgroundColor: '#e3e3e3'}} className="w-72 sm:w-60 h-screen sm:h-auto sm:rounded-xl overflow-y-auto border-r-2 sm:border-2 border-white sm:max-h-[calc(100vh-10rem)] pt-14 sm:pt-4 pb-20 sm:pb-0">
+      <div className={`fixed left-0 lg:left-4 top-0 lg:top-20 z-50 transition-transform duration-300 ${
+mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      } lg:block`}>
+        <aside style={{backgroundColor: '#e3e3e3'}} className="w-72 lg:w-60 h-screen lg:h-auto lg:rounded-xl overflow-y-auto border-r-2 lg:border-2 border-white lg:max-h-[calc(100vh-10rem)] pt-14 lg:pt-4 pb-20 lg:pb-0">
           <div className="flex flex-col h-full">
 
           {/* Filter Content */}
@@ -1423,15 +1407,15 @@ function PersonDetailPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 mt-16 sm:mt-20 mx-2 sm:ml-[260px] lg:ml-[260px] sm:mr-2 lg:mr-2" style={{overflow: 'visible', minHeight: 'auto'}}>
-        <div className="relative pt-0" style={{marginLeft: 0, marginRight: 0, paddingLeft: '3.5rem', paddingRight: '3.5rem', width: '100%', overflow: 'visible', minHeight: 'auto'}}>
+      <div className="flex-1 mt-16 lg:mt-20 mx-2 lg:ml-[260px] lg:mr-2" style={{overflow: 'visible', minHeight: 'auto'}}>
+        <div className="relative pt-0" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%', overflow: 'visible', minHeight: 'auto'}}>
           
           {/* Grid View */}
           {layoutView === 'grid' && viewMode === 'projects' && (
             <>
               <div 
                 key={`projects-grid-${gridPage}`}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] md:mb-0 mb-20" 
+                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] lg:mb-0 mb-20" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
                 gridAutoRows: 'auto',
@@ -1464,7 +1448,7 @@ function PersonDetailPage() {
 
             {/* Mobile Navigation - Bottom Fixed for Projects Grid */}
             {Math.ceil(totalProjects / 8) > 1 && (
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
@@ -1504,7 +1488,7 @@ function PersonDetailPage() {
             <>
               <div 
                 key={`people-grid-${gridPage}`}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[18px] md:mb-0 mb-20" 
+                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] lg:mb-0 mb-20" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
                 gridAutoRows: 'auto',
@@ -1537,7 +1521,7 @@ function PersonDetailPage() {
 
             {/* Mobile Navigation - Bottom Fixed for People Grid */}
             {Math.ceil(totalProfiles / 8) > 1 && (
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
