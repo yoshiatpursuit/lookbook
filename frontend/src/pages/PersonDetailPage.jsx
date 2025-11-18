@@ -1023,10 +1023,10 @@ function PersonDetailPage() {
   const currentLength = viewMode === 'people' ? allProfiles.length : allProjects.length;
   const canGoNext = currentIndex >= 0 && currentIndex < currentLength - 1;
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center min-h-screen" style={{backgroundColor: '#e3e3e3'}}>Loading...</div>;
   // Only show error if we're done loading and viewMode has been set
-  if (error && slug && !loading && viewMode) return <div className="flex items-center justify-center min-h-screen text-red-500">{error}</div>;
-  if (!person && !project && slug && layoutView === 'detail') return <div className="flex items-center justify-center min-h-screen">Not found</div>;
+  if (error && slug && !loading && viewMode) return <div className="flex items-center justify-center min-h-screen text-red-500" style={{backgroundColor: '#e3e3e3'}}>{error}</div>;
+  if (!person && !project && slug && layoutView === 'detail') return <div className="flex items-center justify-center min-h-screen" style={{backgroundColor: '#e3e3e3'}}>Not found</div>;
 
   const initials = person?.name?.split(' ').map(n => n.charAt(0)).join('') || project?.title?.charAt(0) || '?';
 
