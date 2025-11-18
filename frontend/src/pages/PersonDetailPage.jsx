@@ -1033,12 +1033,12 @@ function PersonDetailPage() {
   return (
     <div className={`flex ${layoutView === 'grid' ? 'grid-view-page' : ''}`} style={{backgroundColor: '#e3e3e3', width: '100%', maxWidth: '100vw', overflowX: 'hidden', minHeight: '100vh'}}>
       {/* Logo - Top Left - Fixed */}
-      <div className="fixed left-2 md:left-4 top-2 md:top-4 z-50">
+      <div className="fixed left-2 lg:left-5 top-2 lg:top-4 z-50">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
           <img 
             src="/pursuit-wordmark.png" 
             alt="Pursuit" 
-            className="h-6 md:h-8"
+            className="h-8"
           />
           <span className="text-sm lg:text-base hidden lg:inline">Lookbook</span>
         </a>
@@ -1276,7 +1276,7 @@ function PersonDetailPage() {
       )}
 
       {/* Left Sidebar - Floating - Slides in on mobile, always visible on desktop */}
-      <div className={`fixed left-0 lg:left-4 top-0 lg:top-20 z-50 transition-transform duration-300 ${
+      <div className={`fixed left-0 lg:left-5 top-0 lg:top-20 z-50 transition-transform duration-300 ${
 mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } lg:block`}>
         <aside style={{backgroundColor: '#e3e3e3'}} className="w-72 lg:w-60 h-screen lg:h-auto lg:rounded-xl overflow-y-auto border-r-2 lg:border-2 border-white lg:max-h-[calc(100vh-10rem)] pt-14 lg:pt-4 pb-20 lg:pb-0">
@@ -1557,7 +1557,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
-                className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                className="page-nav-button h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                 aria-label="Next page"
               >
                 <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
@@ -1610,7 +1610,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
-                className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                className="page-nav-button h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                 aria-label="Next page"
               >
                 <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />

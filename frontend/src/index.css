@@ -515,18 +515,21 @@
 /* View toggle sliding background animation */
 .view-toggle-container {
   position: relative;
+  padding: 0;
+  margin: 0;
 }
 
 .view-toggle-slider {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: -1px;
+  left: -1px;
   width: 2.5rem;
   height: 2.5rem;
   background-color: #4242ea;
-  border-radius: 0.25rem;
+  border-radius: 0.375rem; /* Match rounded-md (6px) */
   transition: transform 0.3s ease-in-out;
   z-index: 0;
+  margin: 0;
 }
 
 .view-toggle-container button {
@@ -540,6 +543,8 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .view-toggle-container button[data-active="true"] {
