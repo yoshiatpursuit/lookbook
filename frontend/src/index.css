@@ -99,6 +99,11 @@
   * {
     @apply border-border;
   }
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: 'Graphik', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -442,12 +447,205 @@
 /* Custom cursor for profile cards - circular arrow button */
 .person-card-cursor,
 .person-card-cursor * {
-  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white'/%3E%3Cpath d='M13 8L21 16L13 24' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 16 16, pointer !important;
+  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='white'/%3E%3Cpath d='M16 10L26 20L16 30' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 20 20, pointer !important;
 }
 
 /* Custom cursor for project cards - circular arrow button */
 .project-card-cursor,
 .project-card-cursor * {
-  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='white'/%3E%3Cpath d='M13 8L21 16L13 24' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 16 16, pointer !important;
+  cursor: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='white'/%3E%3Cpath d='M16 10L26 20L16 30' stroke='%234242ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 20 20, pointer !important;
+}
+
+/* Page navigation button hover effect with swipe animation */
+.page-nav-button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Left-to-right swipe for right chevrons (default) */
+.page-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #4242ea;
+  transition: left 0.2s ease-out;
+  z-index: 0;
+}
+
+.page-nav-button:hover:not(:disabled)::before {
+  left: 0;
+}
+
+/* Left-to-right swipe for left chevrons */
+.page-nav-button.page-nav-button-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: auto !important;
+  right: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #4242ea;
+  transition: right 0.2s ease-out !important;
+  z-index: 0;
+}
+
+.page-nav-button.page-nav-button-left:hover:not(:disabled)::before {
+  right: 0;
+  left: auto !important;
+}
+
+.page-nav-button > * {
+  position: relative;
+  z-index: 1;
+  transition: color 0.2s ease-out;
+}
+
+.page-nav-button-left > * {
+  transition: color 0.2s ease-out;
+}
+
+.page-nav-button:hover:not(:disabled) svg {
+  color: white; /* Match default background color (white) on hover */
+}
+
+/* View toggle sliding background animation */
+.view-toggle-container {
+  position: relative;
+}
+
+.view-toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #4242ea;
+  border-radius: 0.25rem;
+  transition: transform 0.3s ease-in-out;
+  z-index: 0;
+}
+
+.view-toggle-container button {
+  position: relative;
+  z-index: 1;
+  background-color: transparent !important;
+  transition: color 0.2s ease-in-out;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.view-toggle-container button[data-active="true"] {
+  color: white;
+}
+
+.view-toggle-container button[data-active="false"] {
+  color: black;
+}
+
+/* Fade in animation for cards and views */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle fade in animation for list view */
+@keyframes fadeInList {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide scrollbar only in grid view - apply to html/body */
+.grid-view-page {
+  /* Hide scrollbar but keep scrolling functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.grid-view-page::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Also hide scrollbar on html/body when grid view is active */
+body.grid-view-page,
+html.grid-view-page {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+  overflow-y: hidden !important;
+}
+
+body.grid-view-page::-webkit-scrollbar,
+html.grid-view-page::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
+/* Remove all scrollbars from content area - let browser handle scrolling */
+.flex-1 {
+  overflow: visible !important;
+}
+
+.flex-1 > div {
+  overflow: visible !important;
+}
+
+/* Card dimensions for 4-column grid view - calculated from available space */
+/* Smooth transition from 3-column to 4-column view */
+@media (min-width: 1536px) {
+  .person-card,
+  .project-card {
+    /* Calculate width: (viewport - sidebar - margins - padding - gaps) / 4 */
+    width: calc((100vw - 260px - 2rem - 54px) / 4) !important;
+    
+    /* Calculate height: (viewport - top margin - padding - gap) / 2 */
+    height: calc((100vh - 5rem - 1rem - 18px) / 2) !important;
+    
+    /* Remove fixed aspect ratio to allow calculated dimensions */
+    aspect-ratio: auto !important;
+    
+    /* Smooth transition when resizing */
+    transition: width 0.3s ease-out, height 0.3s ease-out;
+  }
+}
+
+/* Smooth transition for cards when switching between breakpoints */
+.person-card,
+.project-card {
+  transition: width 0.3s ease-out, height 0.3s ease-out, aspect-ratio 0.3s ease-out;
+}
+
+/* Search input font size override */
+.search-input,
+.search-input::placeholder {
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+}
+
+/* Search input hover - change text color to pursuit purple */
+.search-input:hover {
+  color: #4242ea;
+}
+
+.search-input:hover::placeholder {
+  color: #4242ea;
+  opacity: 0.7;
 }
 

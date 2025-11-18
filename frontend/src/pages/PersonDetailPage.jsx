@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { profilesAPI, projectsAPI, getImageUrl } from '../utils/api';
 import analytics from '../utils/analytics';
@@ -858,6 +858,45 @@ function PersonDetailPage() {
     }
   }, [allProfiles, allProjects, person, project, viewMode]);
 
+  // Hide scrollbar on body/html only when in 4x2 grid view (4 columns, exactly 8 items)
+  useLayoutEffect(() => {
+    const updateScrollbar = () => {
+      // Check if we're in grid view, 4-column layout (2xl breakpoint), and have exactly 8 items
+      const is4ColumnView = window.innerWidth >= 1536; // 2xl breakpoint
+      const itemCount = viewMode === 'people' ? allProfiles.length : allProjects.length;
+      const isPerfect4x2 = layoutView === 'grid' && is4ColumnView && itemCount === 8;
+      
+      // Apply synchronously before browser paints to prevent flash
+      if (isPerfect4x2) {
+        document.body.classList.add('grid-view-page');
+        document.documentElement.classList.add('grid-view-page');
+        // Also set inline style immediately to prevent flash
+        document.body.style.overflowY = 'hidden';
+        document.documentElement.style.overflowY = 'hidden';
+      } else {
+        document.body.classList.remove('grid-view-page');
+        document.documentElement.classList.remove('grid-view-page');
+        document.body.style.overflowY = '';
+        document.documentElement.style.overflowY = '';
+      }
+    };
+    
+    // Update immediately
+    updateScrollbar();
+    
+    // Also listen for window resize to update when switching between column layouts
+    window.addEventListener('resize', updateScrollbar);
+    
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('resize', updateScrollbar);
+      document.body.classList.remove('grid-view-page');
+      document.documentElement.classList.remove('grid-view-page');
+      document.body.style.overflowY = '';
+      document.documentElement.style.overflowY = '';
+    };
+  }, [layoutView, viewMode, allProfiles.length, allProjects.length]);
+
   // Prefetch adjacent items for instant navigation
   useEffect(() => {
     if (currentIndex < 0 || layoutView !== 'detail') return;
@@ -992,7 +1031,7 @@ function PersonDetailPage() {
   const initials = person?.name?.split(' ').map(n => n.charAt(0)).join('') || project?.title?.charAt(0) || '?';
 
   return (
-    <div className="flex" style={{backgroundColor: '#e3e3e3', overflow: 'visible', minHeight: '100vh'}}>
+    <div className={`flex ${layoutView === 'grid' ? 'grid-view-page' : ''}`} style={{backgroundColor: '#e3e3e3', width: '100%', maxWidth: '100vw', overflowX: 'hidden', minHeight: '100vh'}}>
       {/* Logo - Top Left - Fixed */}
       <div className="fixed left-2 md:left-4 top-2 md:top-4 z-50">
         <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer">
@@ -1005,160 +1044,225 @@ function PersonDetailPage() {
         </a>
       </div>
 
-      {/* Mobile Menu Button - Top Right - Fixed */}
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="lg:hidden fixed right-2 top-2 z-50 bg-white rounded-md border border-gray-200 h-10 w-10 flex items-center justify-center shadow-md"
-        aria-label="Toggle menu"
-      >
-        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </button>
+      {/* Mobile: Fixed Top Right - Search, View Toggles, and Hamburger in one unit */}
+      <div className="lg:hidden fixed top-2 right-2 z-50 flex items-center gap-2">
+        {layoutView === 'grid' && (
+          <Input
+            placeholder={viewMode === 'people' ? 'Search People' : 'Search Projects'}
+            value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
+            onChange={(e) => {
+              if (viewMode === 'people') {
+                setPeopleFilters({ ...peopleFilters, search: e.target.value });
+              } else {
+                setProjectFilters({ ...projectFilters, search: e.target.value });
+              }
+            }}
+            className="search-input w-32 h-10 bg-white"
+          />
+        )}
+        {/* View Toggle Icons */}
+        <div className="view-toggle-container flex items-center gap-1 bg-white rounded-md border h-10 relative" style={{padding: 0}}>
+          <div 
+            className="view-toggle-slider"
+            style={{
+              transform: layoutView === 'grid' ? 'translateX(0)' : 'translateX(calc(2.5rem + 4px))'
+            }}
+          />
+          <button 
+            className="rounded hover:bg-gray-100/50"
+            data-active={layoutView === 'grid'}
+            onClick={() => {
+              setLayoutView('grid');
+              if (viewMode === 'people') {
+                navigate('/people');
+              } else {
+                navigate('/projects');
+              }
+            }}
+          >
+            <Grid3x3 className="w-3 h-3" />
+          </button>
+          <button 
+            className="rounded hover:bg-gray-100/50" 
+            data-active={layoutView === 'detail'}
+            onClick={() => {
+              if (!slug) {
+                if (viewMode === 'people' && filteredProfiles.length > 0) {
+                  navigate(`/people/${filteredProfiles[0].slug}`);
+                } else if (viewMode === 'projects' && filteredProjects.length > 0) {
+                  navigate(`/projects/${filteredProjects[0].slug}`);
+                }
+              } else {
+                setLayoutView('detail');
+              }
+            }}
+          >
+            <Square className="w-3 h-3" />
+          </button>
+        </div>
+        {/* Hamburger Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="bg-white rounded-md border border-gray-200 h-10 w-10 flex items-center justify-center shadow-md"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+      </div>
 
-      {/* Search Bar and View Icons - Scrolls with content */}
-      <div className="absolute top-2 lg:top-4 z-40 left-2 right-12 lg:right-2 lg:left-[268px]">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-2 lg:gap-3" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%'}}>
+      {/* Desktop: Search Bar and View Icons - Scrolls with content */}
+      <div className="hidden lg:block absolute top-4 z-40 right-2 left-[268px]">
+        <div className="flex flex-row justify-between items-end gap-3" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%'}}>
           {/* Left side: Pagination controls - aligned with cards */}
-          <div className="flex items-center gap-2 lg:gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
+          <div className="flex items-center gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
             {/* Page indicator with navigation - left-aligned */}
             {layoutView === 'grid' && (
               <>
                 {viewMode === 'projects' && Math.ceil(totalProjects / 8) > 1 && (
-                  <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                  <div className="flex items-center gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
                     <button
                       onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                       disabled={gridPage === 0}
-                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                       aria-label="Previous page"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
                     </button>
-                    <div className="text-sm lg:text-base font-semibold text-gray-700">
-                      Page {gridPage + 1} of {Math.ceil(totalProjects / 8)}
+                    <div className="text-base text-gray-700 w-20 text-center">
+                      <span className="font-bold">P. {String(gridPage + 1).padStart(2, '0')}</span> / {String(Math.ceil(totalProjects / 8)).padStart(2, '0')}
                     </div>
                     <button
                       onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
                       disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
-                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      className="page-nav-button h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                       aria-label="Next page"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
                     </button>
                   </div>
                 )}
                 {viewMode === 'people' && Math.ceil(totalProfiles / 8) > 1 && (
-                  <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+                  <div className="flex items-center gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
                     <button
                       onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                       disabled={gridPage === 0}
-                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                       aria-label="Previous page"
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
                     </button>
-                    <div className="text-sm lg:text-base font-semibold text-gray-700">
-                      Page {gridPage + 1} of {Math.ceil(totalProfiles / 8)}
+                    <div className="text-base text-gray-700 w-20 text-center">
+                      <span className="font-bold">P. {String(gridPage + 1).padStart(2, '0')}</span> / {String(Math.ceil(totalProfiles / 8)).padStart(2, '0')}
                     </div>
                     <button
                       onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
                       disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
-                      className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                      className="page-nav-button h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                       aria-label="Next page"
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
                     </button>
                   </div>
                 )}
               </>
             )}
             {layoutView === 'list' && (
-              <div className="text-sm lg:text-base font-semibold text-gray-700 hidden lg:block">
+              <div className="h-10 flex items-center text-base font-semibold text-gray-700">
                 {viewMode === 'people' ? filteredProfiles.length : filteredProjects.length} {viewMode === 'people' ? 'People' : 'Projects'}
               </div>
             )}
             {layoutView === 'detail' && currentLength > 1 && (
-              <div className="flex items-center gap-3 hidden lg:flex" style={{marginLeft: 0, paddingLeft: 0}}>
+              <div className="flex items-center gap-3" style={{marginLeft: 0, paddingLeft: 0}}>
                 <button
                   onClick={handlePrevious}
                   disabled={!canGoPrevious}
-                  className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
                   aria-label="Previous"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
                 </button>
-                <div className="text-sm lg:text-base font-semibold text-gray-700">
-                  {currentIndex + 1} / {currentLength}
+                <div className="text-base text-gray-700 w-20 text-center">
+                  <span className="font-bold">P. {String(currentIndex + 1).padStart(2, '0')}</span> / {String(currentLength).padStart(2, '0')}
                 </div>
                 <button
                   onClick={handleNext}
                   disabled={!canGoNext}
-                  className="h-10 px-2.5 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                  className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                   aria-label="Next"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
                 </button>
               </div>
             )}
           </div>
           
           {/* Right side: Search and View Icons */}
-          <div className="flex items-center gap-2 lg:gap-3 ml-auto w-full lg:w-auto justify-end">
-          {layoutView === 'grid' && (
-          <Input
-              placeholder={viewMode === 'people' ? 'Search People' : 'Search Projects'}
-              value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
-              onChange={(e) => {
-                if (viewMode === 'people') {
-                  setPeopleFilters({ ...peopleFilters, search: e.target.value });
-                } else {
-                  setProjectFilters({ ...projectFilters, search: e.target.value });
-                }
-              }}
-            className="w-32 lg:w-48 xl:w-64 h-10 bg-white text-sm"
-          />
-          )}
-          {/* View Toggle Icons */}
-          <div className="flex items-center gap-1 bg-white rounded-md border p-1 h-10">
-            <button 
-              className="p-1.5 lg:p-2 rounded hover:bg-gray-100"
-              style={{backgroundColor: layoutView === 'grid' ? '#4242ea' : 'transparent', color: layoutView === 'grid' ? 'white' : 'black'}}
-              onClick={() => {
-                setLayoutView('grid');
-                // Navigate to base route when switching to grid view
-                if (viewMode === 'people') {
-                  navigate('/people');
-                } else {
-                  navigate('/projects');
-                }
-              }}
-            >
-              <Grid3x3 className="w-3 h-3 lg:w-4 lg:h-4" />
-            </button>
-            <button 
-              className="p-1.5 lg:p-2 rounded" 
-              style={{backgroundColor: layoutView === 'detail' ? '#4242ea' : 'transparent', color: layoutView === 'detail' ? 'white' : 'black'}}
-              onClick={() => {
-                // When switching to detail view, navigate to first item if no slug
-                if (!slug) {
-                  if (viewMode === 'people' && filteredProfiles.length > 0) {
-                    navigate(`/people/${filteredProfiles[0].slug}`);
-                  } else if (viewMode === 'projects' && filteredProjects.length > 0) {
-                    navigate(`/projects/${filteredProjects[0].slug}`);
+          <div className="flex items-center gap-3 ml-auto justify-end">
+            {layoutView === 'grid' && (
+              <Input
+                placeholder={viewMode === 'people' ? 'Search People' : 'Search Projects'}
+                value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
+                onChange={(e) => {
+                  if (viewMode === 'people') {
+                    setPeopleFilters({ ...peopleFilters, search: e.target.value });
+                  } else {
+                    setProjectFilters({ ...projectFilters, search: e.target.value });
                   }
-                } else {
-                  setLayoutView('detail');
-                }
-              }}
-            >
-              <Square className="w-3 h-3 lg:w-4 lg:h-4" />
-            </button>
-            <button 
-              className="hidden lg:inline-flex p-1.5 lg:p-2 rounded hover:bg-gray-100"
-              style={{backgroundColor: layoutView === 'list' ? '#4242ea' : 'transparent', color: layoutView === 'list' ? 'white' : 'black'}}
-              onClick={() => setLayoutView('list')}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+                }}
+                className="search-input w-48 xl:w-64 h-10 bg-white"
+              />
+            )}
+            {/* View Toggle Icons */}
+            <div className="view-toggle-container flex items-center gap-1 bg-white rounded-md border h-10 relative" style={{padding: 0}}>
+              <div 
+                className="view-toggle-slider"
+                style={{
+                  transform: layoutView === 'grid' 
+                    ? 'translateX(0)' 
+                    : layoutView === 'detail' 
+                    ? 'translateX(calc(2.5rem + 4px))' 
+                    : 'translateX(calc(5rem + 8px))'
+                }}
+              />
+              <button 
+                className="rounded hover:bg-gray-100/50"
+                data-active={layoutView === 'grid'}
+                onClick={() => {
+                  setLayoutView('grid');
+                  if (viewMode === 'people') {
+                    navigate('/people');
+                  } else {
+                    navigate('/projects');
+                  }
+                }}
+              >
+                <Grid3x3 className="w-4 h-4" />
+              </button>
+              <button 
+                className="rounded hover:bg-gray-100/50" 
+                data-active={layoutView === 'detail'}
+                onClick={() => {
+                  if (!slug) {
+                    if (viewMode === 'people' && filteredProfiles.length > 0) {
+                      navigate(`/people/${filteredProfiles[0].slug}`);
+                    } else if (viewMode === 'projects' && filteredProjects.length > 0) {
+                      navigate(`/projects/${filteredProjects[0].slug}`);
+                    }
+                  } else {
+                    setLayoutView('detail');
+                  }
+                }}
+              >
+                <Square className="w-4 h-4" />
+              </button>
+              <button 
+                className="rounded hover:bg-gray-100/50"
+                data-active={layoutView === 'list'}
+                onClick={() => setLayoutView('list')}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1407,33 +1511,21 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 mt-16 lg:mt-20 mx-2 lg:ml-[260px] lg:mr-2" style={{overflow: 'visible', minHeight: 'auto'}}>
-        <div className="relative pt-0" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%', overflow: 'visible', minHeight: 'auto'}}>
+      <div className="flex-1 mt-16 lg:mt-20 mx-2 lg:ml-[260px] lg:mr-2" style={{width: '100%', maxWidth: '100%', overflowX: 'hidden'}}>
+        <div className="relative pt-0 pb-4" style={{marginLeft: 0, marginRight: 0, paddingLeft: '1rem', paddingRight: '1rem', width: '100%', maxWidth: '100%', overflowX: 'hidden'}}>
           
           {/* Grid View */}
           {layoutView === 'grid' && viewMode === 'projects' && (
             <>
               <div 
                 key={`projects-grid-${gridPage}`}
-                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] lg:mb-0 mb-20" 
+                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] mb-0" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
                 gridAutoRows: 'auto',
                 overflow: 'visible'
                 }}
               >
-              <style>{`
-                @keyframes fadeIn {
-                  from {
-                    opacity: 0;
-                    transform: scale(0.95);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: scale(1);
-                  }
-                }
-              `}</style>
               {allProjects.map((proj, idx) => (
                 <MemoizedProjectCard 
                   key={proj.slug}
@@ -1448,35 +1540,27 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 
             {/* Mobile Navigation - Bottom Fixed for Projects Grid */}
             {Math.ceil(totalProjects / 8) > 1 && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-center gap-3 shadow-lg">
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
-                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                aria-label="Previous page"
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{backgroundColor: gridPage > 0 ? '#4242ea' : '#e5e7eb'}}
-                >
-                  <ChevronLeft className="w-5 h-5" style={{color: gridPage > 0 ? 'white' : '#9ca3af'}} />
-                </div>
+                <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
               </button>
               
-              <div className="text-sm font-semibold text-gray-700">
-                Page {gridPage + 1} of {Math.ceil(totalProjects / 8)}
+              <div className="text-base text-gray-700 w-20 text-center">
+                <span className="font-bold">P. {String(gridPage + 1).padStart(2, '0')}</span> / {String(Math.ceil(totalProjects / 8)).padStart(2, '0')}
               </div>
 
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProjects / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProjects / 8) - 1}
-                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                aria-label="Next page"
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{backgroundColor: gridPage < Math.ceil(totalProjects / 8) - 1 ? '#4242ea' : '#e5e7eb'}}
-                >
-                  <ChevronRight className="w-5 h-5" style={{color: gridPage < Math.ceil(totalProjects / 8) - 1 ? 'white' : '#9ca3af'}} />
-                </div>
+                <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
               </button>
             </div>
             )}
@@ -1488,25 +1572,13 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             <>
               <div 
                 key={`people-grid-${gridPage}`}
-                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] lg:mb-0 mb-20" 
+                className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] mb-0" 
                 style={{
                 animation: 'fadeIn 0.3s ease-in-out',
                 gridAutoRows: 'auto',
                 overflow: 'visible'
                 }}
               >
-              <style>{`
-                @keyframes fadeIn {
-                  from {
-                    opacity: 0;
-                    transform: scale(0.95);
-                  }
-                  to {
-                    opacity: 1;
-                    transform: scale(1);
-                  }
-                }
-              `}</style>
               {allProfiles.map((prof, idx) => (
                 <MemoizedProfileCard 
                   key={prof.slug}
@@ -1521,35 +1593,27 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
 
             {/* Mobile Navigation - Bottom Fixed for People Grid */}
             {Math.ceil(totalProfiles / 8) > 1 && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-center gap-3 shadow-lg">
               <button
                 onClick={() => setGridPage(Math.max(0, gridPage - 1))}
                 disabled={gridPage === 0}
-                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                aria-label="Previous page"
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{backgroundColor: gridPage > 0 ? '#4242ea' : '#e5e7eb'}}
-                >
-                  <ChevronLeft className="w-5 h-5" style={{color: gridPage > 0 ? 'white' : '#9ca3af'}} />
-                </div>
+                <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
               </button>
               
-              <div className="text-sm font-semibold text-gray-700">
-                Page {gridPage + 1} of {Math.ceil(totalProfiles / 8)}
+              <div className="text-base text-gray-700 w-20 text-center">
+                <span className="font-bold">P. {String(gridPage + 1).padStart(2, '0')}</span> / {String(Math.ceil(totalProfiles / 8)).padStart(2, '0')}
               </div>
 
               <button
                 onClick={() => setGridPage(Math.min(Math.ceil(totalProfiles / 8) - 1, gridPage + 1))}
                 disabled={gridPage >= Math.ceil(totalProfiles / 8) - 1}
-                className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                aria-label="Next page"
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                  style={{backgroundColor: gridPage < Math.ceil(totalProfiles / 8) - 1 ? '#4242ea' : '#e5e7eb'}}
-                >
-                  <ChevronRight className="w-5 h-5" style={{color: gridPage < Math.ceil(totalProfiles / 8) - 1 ? 'white' : '#9ca3af'}} />
-                </div>
+                <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
               </button>
             </div>
             )}
@@ -1560,7 +1624,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {layoutView === 'list' && (
             <Card className="rounded-xl border-2 border-white shadow-none mb-12" style={{
               backgroundColor: 'white',
-              animation: 'fadeIn 0.3s ease-in-out',
+              animation: 'fadeInList 0.3s ease-in-out',
             }}>
               <CardContent className="p-6">
                 {viewMode === 'projects' && (
@@ -1765,35 +1829,27 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
             <>
           {/* Mobile Navigation - Bottom Fixed */}
           {currentLength > 1 && (
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-between shadow-lg">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 px-4 py-3 flex items-center justify-center gap-3 shadow-lg">
             <button
               onClick={handlePrevious}
               disabled={!canGoPrevious}
-              className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="page-nav-button page-nav-button-left h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+              aria-label="Previous"
             >
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                style={{backgroundColor: canGoPrevious ? '#4242ea' : '#e5e7eb'}}
-              >
-                <ChevronLeft className="w-5 h-5" style={{color: canGoPrevious ? 'white' : '#9ca3af'}} />
-              </div>
+              <ChevronLeft className="w-[30px] h-[30px]" strokeWidth={1.5} />
             </button>
             
-            <div className="text-sm font-semibold text-gray-700">
-              {currentIndex + 1} / {currentLength}
+            <div className="text-base text-gray-700 w-20 text-center">
+              <span className="font-bold">P. {String(currentIndex + 1).padStart(2, '0')}</span> / {String(currentLength).padStart(2, '0')}
             </div>
 
             <button
               onClick={handleNext}
               disabled={!canGoNext}
-              className="flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-10 w-10 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+              aria-label="Next"
             >
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
-                style={{backgroundColor: canGoNext ? '#4242ea' : '#e5e7eb'}}
-              >
-                <ChevronRight className="w-5 h-5" style={{color: canGoNext ? 'white' : '#9ca3af'}} />
-              </div>
+              <ChevronRight className="w-[30px] h-[30px]" strokeWidth={1.5} />
             </button>
           </div>
           )}
