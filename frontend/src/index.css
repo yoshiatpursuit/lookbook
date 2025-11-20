@@ -510,7 +510,34 @@
 }
 
 .page-nav-button:hover:not(:disabled) svg {
-  color: white; /* Match default background color (white) on hover */
+  color: white; /* Chevron turns white on hover to contrast with purple background */
+}
+
+.page-nav-button:hover:not(:disabled) span {
+  color: white !important; /* Text turns white on hover to contrast with purple background */
+}
+
+/* Disabled state: white background with gray chevron, no border */
+.page-nav-button:disabled {
+  background-color: #ffffff !important; /* Pure white background */
+  border: none !important; /* No border */
+  color: #d1d5db !important; /* gray-300 - 50% lighter */
+}
+
+.page-nav-button:disabled svg {
+  color: #d1d5db !important; /* gray-300 - 50% lighter */
+}
+
+/* Force error Frown icon stroke width to 1.5px */
+.error-icon {
+  stroke-width: 1.5 !important;
+}
+
+.error-icon svg,
+.error-icon path,
+.error-icon line,
+.error-icon circle {
+  stroke-width: 1.5 !important;
 }
 
 /* View toggle sliding background animation */
@@ -653,5 +680,44 @@ html.grid-view-page::-webkit-scrollbar {
 .search-input:hover::placeholder {
   color: #4242ea;
   opacity: 0.7;
+}
+
+/* Search input focus/active state - pursuit purple background, border, and white text */
+.search-input:focus,
+.search-input:focus-visible {
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  border-color: #4242ea !important;
+  background-color: #4242ea !important;
+  color: white !important;
+  outline: none !important;
+  box-shadow: none !important; /* Remove the default ring */
+  --tw-ring-width: 0 !important; /* Remove Tailwind ring */
+  --tw-ring-color: transparent !important;
+}
+
+.search-input:focus::placeholder,
+.search-input:focus-visible::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important; /* White placeholder with opacity */
+}
+
+/* Search clear button - ensure stroke width matches border visually (2px to match 1.5px border) */
+.search-clear-icon {
+  stroke-width: 2px !important;
+}
+
+.search-clear-icon svg,
+.search-clear-icon svg path {
+  stroke-width: 2px !important;
+}
+
+/* Search clear button hover state */
+.search-clear-button:hover {
+  background-color: white !important;
+  border-color: white !important;
+}
+
+.search-clear-button:hover .search-clear-icon {
+  color: #4242ea !important; /* Pursuit purple on hover */
 }
 

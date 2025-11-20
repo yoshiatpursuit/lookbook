@@ -8,7 +8,7 @@ const compression = require('compression');
 const { pool } = require('./db/dbConfig');
 
 const app = express();
-const PORT = process.env.PORT || 4002; // Different port to avoid conflicts
+const PORT = process.env.PORT || 4005; // Different port to avoid conflicts
 
 // =====================================================
 // MIDDLEWARE
