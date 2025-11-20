@@ -1671,7 +1671,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {/* Grid View */}
           {layoutView === 'grid' && viewMode === 'projects' && (
             <>
-              {filteredProjects.length === 0 ? (
+              {totalProjects === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -1697,7 +1697,8 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                   overflow: 'visible'
                   }}
                 >
-                  {filteredProjects.slice(gridPage * 8, (gridPage + 1) * 8).map((proj, idx) => (
+                  {/* In grid view, API already returns paginated data, so display directly */}
+                  {allProjects.map((proj, idx) => (
                     <MemoizedProjectCard 
                       key={proj.slug}
                       proj={proj}
@@ -1752,7 +1753,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {/* People Grid View */}
           {layoutView === 'grid' && viewMode === 'people' && (
             <>
-              {filteredProfiles.length === 0 ? (
+              {totalProfiles === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -1778,7 +1779,8 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                   overflow: 'visible'
                   }}
                 >
-                  {filteredProfiles.slice(gridPage * 8, (gridPage + 1) * 8).map((prof, idx) => (
+                  {/* In grid view, API already returns paginated data, so display directly */}
+                  {allProfiles.map((prof, idx) => (
                     <MemoizedProfileCard 
                       key={prof.slug}
                       prof={prof}
