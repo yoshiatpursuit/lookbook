@@ -721,6 +721,16 @@ html.grid-view-page::-webkit-scrollbar {
   color: #4242ea !important; /* Pursuit purple on hover */
 }
 
+/* Search clear button hover state when search is committed (purple background, white icon) */
+.search-clear-button[data-committed="true"]:hover {
+  background-color: #4242ea !important;
+  border-color: #4242ea !important;
+}
+
+.search-clear-button[data-committed="true"]:hover .search-clear-icon {
+  color: white !important;
+}
+
 @keyframes fadeInText {
   from {
     opacity: 0;
