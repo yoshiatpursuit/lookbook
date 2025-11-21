@@ -19,6 +19,7 @@ function HomePage() {
 
   // Fetch projects on mount
   useEffect(() => {
+    let timeoutId;
     const fetchProjects = async () => {
       try {
         const data = await projectsAPI.getAll({ limit: 30 });
@@ -48,17 +49,21 @@ function HomePage() {
           });
           setProjectImages(images);
           // After initial load, disable the intro animation for images
-          setTimeout(() => setIsImageInitialLoad(false), 2000);
+          timeoutId = setTimeout(() => setIsImageInitialLoad(false), 2000);
         }
       } catch (err) {
         console.error('Error fetching projects:', err);
       }
     };
     fetchProjects();
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Fetch profiles on mount
   useEffect(() => {
+    let timeoutId;
     const fetchProfiles = async () => {
       try {
         const data = await profilesAPI.getAll({ limit: 30 });
@@ -67,13 +72,16 @@ function HomePage() {
           // Initialize with first 5 profiles
           setVisibleProfiles(data.data.slice(0, 5));
           // After initial load, disable the intro animation
-          setTimeout(() => setIsInitialLoad(false), 2000);
+          timeoutId = setTimeout(() => setIsInitialLoad(false), 2000);
         }
       } catch (err) {
         console.error('Error fetching profiles:', err);
       }
     };
     fetchProfiles();
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Rotate background images

@@ -16,14 +16,18 @@ import AdminProjectEditPage from './pages/AdminProjectEditPage';
 import AdminBulkUploadPage from './pages/AdminBulkUploadPage';
 import AdminTaxonomyPage from './pages/AdminTaxonomyPage';
 import { AuthProvider } from './contexts/AuthContext';
+import { LoadingProgressProvider } from './contexts/LoadingProgressContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProgressBar from './components/ProgressBar';
 
 function App() {
   return (
     <AuthProvider>
-      <Toaster position="top-right" richColors />
-      <div className="app">
-        <Routes>
+      <LoadingProgressProvider>
+        <Toaster position="top-right" richColors />
+        <ProgressBar />
+        <div className="app">
+          <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/people" element={<PersonDetailPage />} />
           <Route path="/people/:slug" element={<PersonDetailPage />} />
@@ -43,8 +47,9 @@ function App() {
           <Route path="/admin/projects/:slug/edit" element={<ProtectedRoute><AdminProjectEditPage /></ProtectedRoute>} />
           <Route path="/admin/bulk-upload" element={<ProtectedRoute><AdminBulkUploadPage /></ProtectedRoute>} />
           <Route path="/admin/taxonomy" element={<ProtectedRoute><AdminTaxonomyPage /></ProtectedRoute>} />
-        </Routes>
-      </div>
+          </Routes>
+        </div>
+      </LoadingProgressProvider>
     </AuthProvider>
   );
 }

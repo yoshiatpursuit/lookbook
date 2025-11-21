@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Frown } from 'lucide-react';
 import { profilesAPI } from '../utils/api';
 import PersonCard from '../components/PersonCard';
 import FilterBar from '../components/FilterBar';
+import { useLoadingProgress } from '../contexts/LoadingProgressContext';
 import './PeoplePage.css';
 
 function PeoplePage() {
@@ -11,6 +12,7 @@ function PeoplePage() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { startLoading, setLoadingProgress, completeLoading } = useLoadingProgress();
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     skills: searchParams.getAll('skills'),
@@ -47,8 +49,11 @@ function PeoplePage() {
     const fetchProfiles = async () => {
       setLoading(true);
       setError(null);
+      startLoading();
+      setLoadingProgress(10);
       
       try {
+        setLoadingProgress(30);
         const queryParams = {
           ...filters,
           page: pagination.page,
@@ -57,13 +62,18 @@ function PeoplePage() {
         
         const data = await profilesAPI.getAll(queryParams);
         
+        setLoadingProgress(80);
         if (data.success) {
           setProfiles(data.data);
           setPagination(prev => ({ ...prev, total: data.pagination.total }));
         }
+        setLoadingProgress(100);
+        completeLoading();
       } catch (err) {
         setError('Failed to load profiles. Please try again.');
         console.error(err);
+        setLoadingProgress(100);
+        completeLoading();
       } finally {
         setLoading(false);
       }
@@ -115,12 +125,6 @@ function PeoplePage() {
         onClearFilters={handleClearFilters}
         hasActiveFilters={hasActiveFilters}
       />
-
-      {loading && (
-        <div className="loading">
-          <p>Loading profiles...</p>
-        </div>
-      )}
 
       {error && (
         <div className="error-message">

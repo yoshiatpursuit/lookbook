@@ -1,7 +1,8 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { profilesAPI, projectsAPI, getImageUrl } from '../utils/api';
 import analytics from '../utils/analytics';
+import { useLoadingProgress } from '../contexts/LoadingProgressContext';
 import LazyVideo from '../components/LazyVideo';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -512,7 +513,10 @@ function PersonDetailPage() {
   const [person, setPerson] = useState(null);
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [gridListLoading, setGridListLoading] = useState(false); // Loading state for grid/list views
   const [error, setError] = useState(null);
+  const { startLoading, setLoadingProgress, completeLoading } = useLoadingProgress();
+  const isFetchingRef = useRef(false); // Track if we're currently fetching to prevent multiple simultaneous fetches
   const [allProfiles, setAllProfiles] = useState([]);
   const [allProjects, setAllProjects] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
@@ -632,14 +636,11 @@ function PersonDetailPage() {
   // Filter person's projects based on project filters (for detail view)
   const filteredPersonProjects = useMemo(() => {
     if (!person?.projects) {
-      console.log('No person.projects found');
       return [];
     }
     
     // Handle case where projects might be null or not an array
     const projectsArray = Array.isArray(person.projects) ? person.projects : [];
-    console.log('Person projects:', projectsArray.length, 'projects found');
-    console.log('Sample project:', projectsArray[0]);
     
     // If no filters are applied, return all projects
     const hasSearch = debouncedProjectSearch && debouncedProjectSearch.trim().length > 0;
@@ -647,7 +648,6 @@ function PersonDetailPage() {
     const hasSectorsFilter = projectFilters.sectors.length > 0;
     
     if (!hasSearch && !hasSkillsFilter && !hasSectorsFilter) {
-      console.log('No filters applied, returning all projects');
       return projectsArray;
     }
     
@@ -691,8 +691,6 @@ function PersonDetailPage() {
       return true;
     });
     
-    console.log('Filtered person projects:', filtered.length, 'out of', projectsArray.length, 'projects');
-    console.log('Project filters:', { search: debouncedProjectSearch, skills: projectFilters.skills, sectors: projectFilters.sectors });
     return filtered;
   }, [person?.projects, debouncedProjectSearch, projectFilters.skills, projectFilters.sectors]);
 
@@ -708,7 +706,23 @@ function PersonDetailPage() {
 
   // Fetch data based on current view
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchData = async () => {
+      // Prevent multiple simultaneous fetches
+      if (isFetchingRef.current) {
+        return;
+      }
+      
+      if (layoutView === 'grid' || layoutView === 'list') {
+        isFetchingRef.current = true;
+        if (isMounted) {
+          setGridListLoading(true);
+          startLoading();
+          setLoadingProgress(10); // Start at 10%
+        }
+      }
+      
       if (layoutView === 'grid') {
         // Grid view: fetch paginated data (8 per page)
         const pageSize = 8;
@@ -716,6 +730,7 @@ function PersonDetailPage() {
         
         if (viewMode === 'people') {
           try {
+            setLoadingProgress(30);
             const response = await profilesAPI.getAll({
               limit: pageSize,
               offset,
@@ -725,16 +740,25 @@ function PersonDetailPage() {
               openToWork: peopleFilters.openToWork ? true : undefined
             });
             
+            setLoadingProgress(80);
             if (response.success) {
               setAllProfiles(response.data);
               const total = response.pagination?.total || response.total || response.data.length;
               setTotalProfiles(total);
             }
+            setLoadingProgress(100);
+            completeLoading();
           } catch (err) {
             console.error('Error fetching profiles:', err);
+            setLoadingProgress(100);
+            completeLoading();
+          } finally {
+            setGridListLoading(false);
+            isFetchingRef.current = false;
           }
         } else if (viewMode === 'projects') {
           try {
+            setLoadingProgress(30);
             const response = await projectsAPI.getAll({
               limit: pageSize,
               offset,
@@ -743,19 +767,28 @@ function PersonDetailPage() {
               sectors: projectFilters.sectors.length > 0 ? projectFilters.sectors : undefined
             });
             
+            setLoadingProgress(80);
             if (response.success) {
               setAllProjects(response.data);
               const total = response.pagination?.total || response.total || response.data.length;
               setTotalProjects(total);
             }
+            setLoadingProgress(100);
+            completeLoading();
           } catch (err) {
             console.error('Error fetching projects:', err);
+            setLoadingProgress(100);
+            completeLoading();
+          } finally {
+            setGridListLoading(false);
+            isFetchingRef.current = false;
           }
         }
       } else if (layoutView === 'list') {
         // List view: fetch filtered data
         if (viewMode === 'people') {
           try {
+            setLoadingProgress(30);
             const response = await profilesAPI.getAll({
               limit: 100,
               search: debouncedPeopleSearch,
@@ -764,16 +797,25 @@ function PersonDetailPage() {
               openToWork: peopleFilters.openToWork ? true : undefined
             });
             
+            setLoadingProgress(80);
             if (response.success) {
               setAllProfiles(response.data);
               const total = response.pagination?.total || response.total || response.data.length;
               setTotalProfiles(total);
             }
+            setLoadingProgress(100);
+            completeLoading();
           } catch (err) {
             console.error('Error fetching profiles:', err);
+            setLoadingProgress(100);
+            completeLoading();
+          } finally {
+            setGridListLoading(false);
+            isFetchingRef.current = false;
           }
         } else if (viewMode === 'projects') {
           try {
+            setLoadingProgress(30);
             const response = await projectsAPI.getAll({
               limit: 100,
               search: debouncedProjectSearch,
@@ -781,13 +823,21 @@ function PersonDetailPage() {
               sectors: projectFilters.sectors.length > 0 ? projectFilters.sectors : undefined
             });
             
+            setLoadingProgress(80);
             if (response.success) {
               setAllProjects(response.data);
               const total = response.pagination?.total || response.total || response.data.length;
               setTotalProjects(total);
             }
+            setLoadingProgress(100);
+            completeLoading();
           } catch (err) {
             console.error('Error fetching projects:', err);
+            setLoadingProgress(100);
+            completeLoading();
+          } finally {
+            setGridListLoading(false);
+            isFetchingRef.current = false;
           }
         }
       }
@@ -796,7 +846,12 @@ function PersonDetailPage() {
     };
     
     fetchData();
-  }, [gridPage, viewMode, debouncedPeopleSearch, debouncedProjectSearch, peopleFilters, projectFilters, layoutView]);
+    
+    return () => {
+      isMounted = false;
+      isFetchingRef.current = false;
+    };
+  }, [gridPage, viewMode, debouncedPeopleSearch, debouncedProjectSearch, peopleFilters.skills, peopleFilters.industries, peopleFilters.openToWork, projectFilters.skills, projectFilters.sectors, layoutView]);
 
   // Fetch filters once on mount - these are cached
   useEffect(() => {
@@ -835,7 +890,10 @@ function PersonDetailPage() {
     
     if (viewMode === 'people') {
       const fetchPersonAndList = async () => {
+        startLoading();
+        setLoadingProgress(10);
         try {
+          setLoadingProgress(30);
           // Fetch both in parallel
           // In detail view, ALWAYS fetch full unfiltered list for navigation
           // This ensures we have the complete list regardless of previous filters
@@ -844,6 +902,7 @@ function PersonDetailPage() {
             profilesAPI.getAll({ limit: 100 }) // Always fetch full unfiltered list
           ]);
           
+          setLoadingProgress(70);
           if (personData.success) {
             setPerson(personData.data);
             setProject(null);
@@ -869,9 +928,13 @@ function PersonDetailPage() {
           } else {
             setError('Person not found');
           }
+          setLoadingProgress(100);
+          completeLoading();
         } catch (err) {
           console.error('Error fetching person:', err);
           setError('Person not found');
+          setLoadingProgress(100);
+          completeLoading();
         } finally {
           setLoading(false);
         }
@@ -879,7 +942,10 @@ function PersonDetailPage() {
       fetchPersonAndList();
     } else if (viewMode === 'projects') {
       const fetchProjectAndList = async () => {
+        startLoading();
+        setLoadingProgress(10);
         try {
+          setLoadingProgress(30);
           // Fetch both in parallel
           // In detail view, ALWAYS fetch full unfiltered list for navigation
           // This ensures we have the complete list regardless of previous filters
@@ -888,6 +954,7 @@ function PersonDetailPage() {
             projectsAPI.getAll({ limit: 100 }) // Always fetch full unfiltered list
           ]);
           
+          setLoadingProgress(70);
           if (projectData.success) {
             setProject(projectData.data);
             setPerson(null);
@@ -914,9 +981,13 @@ function PersonDetailPage() {
           } else {
             setError('Project not found');
           }
+          setLoadingProgress(100);
+          completeLoading();
         } catch (err) {
           console.error('Error fetching project:', err);
           setError('Project not found');
+          setLoadingProgress(100);
+          completeLoading();
         } finally {
           setLoading(false);
         }
@@ -1113,7 +1184,7 @@ function PersonDetailPage() {
   const currentLength = viewMode === 'people' ? allProfiles.length : allProjects.length;
   const canGoNext = currentIndex >= 0 && currentIndex < currentLength - 1;
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen" style={{backgroundColor: '#e3e3e3'}}>Loading...</div>;
+  if (loading) return <div className="min-h-screen" style={{backgroundColor: '#e3e3e3'}}></div>;
   // Only show error if we're done loading and viewMode has been set
   if (error && slug && !loading && viewMode) return <div className="flex items-center justify-center min-h-screen text-red-500" style={{backgroundColor: '#e3e3e3'}}>{error}</div>;
   if (!person && !project && slug && layoutView === 'detail') return <div className="flex items-center justify-center min-h-screen" style={{backgroundColor: '#e3e3e3'}}>Not found</div>;
@@ -1671,7 +1742,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {/* Grid View */}
           {layoutView === 'grid' && viewMode === 'projects' && (
             <>
-              {totalProjects === 0 ? (
+              {!gridListLoading && totalProjects === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -1753,7 +1824,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {/* People Grid View */}
           {layoutView === 'grid' && viewMode === 'people' && (
             <>
-              {totalProfiles === 0 ? (
+              {!gridListLoading && totalProfiles === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -1835,7 +1906,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
           {/* List View */}
           {layoutView === 'list' && (
             <>
-              {viewMode === 'projects' && filteredProjects.length === 0 ? (
+              {!gridListLoading && viewMode === 'projects' && filteredProjects.length === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -1851,7 +1922,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     <span className="relative z-10">Clear Search</span>
                   </button>
                 </div>
-              ) : viewMode === 'people' && filteredProfiles.length === 0 ? (
+              ) : !gridListLoading && viewMode === 'people' && filteredProfiles.length === 0 ? (
                 <div className="flex flex-col items-center justify-center" style={{minHeight: 'calc(100vh - 12rem)', gap: '1rem'}}>
                   <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                   <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
@@ -2284,17 +2355,9 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                           const icons = [Camera, Code, Rocket, Zap, Lightbulb, Target];
                           const Icon = icons[(projectCarouselIndex + idx) % icons.length];
                           
-                          // Debug: Log what we have
-                          console.log('Project:', project.title);
-                          console.log('mainImageUrl:', project.mainImageUrl);
-                          console.log('main_image_url:', project.main_image_url);
-                          
                           // Check if project has main_image_url (prioritize this) or icon_url
                           const hasProjectImage = project.mainImageUrl || project.main_image_url || project.icon_url;
                           const imageUrl = project.mainImageUrl || project.main_image_url || project.icon_url;
-                          
-                          console.log('Using imageUrl:', imageUrl);
-                          console.log('hasProjectImage:', hasProjectImage);
                           
                           return (
                             <div key={idx} className="flex gap-3 items-start">
@@ -2316,7 +2379,6 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                                     alt={project.title}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      console.log('Image failed to load for:', project.title);
                                       e.target.style.display = 'none';
                                     }}
                                   />
