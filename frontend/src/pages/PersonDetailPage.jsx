@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Linkedin, Globe, Camera, Code, Rocket, Zap, Lightbulb, Target, Square, Grid3x3, List, ChevronLeft, ChevronRight, Menu, X, Frown } from 'lucide-react';
+import { Linkedin, Globe, Camera, Code, Rocket, Zap, Lightbulb, Target, Square, Grid3x3, List, ChevronLeft, ChevronRight, Menu, X, Frown, Search } from 'lucide-react';
 
 // Custom hook for debounced value
 const useDebounce = (value, delay) => {
@@ -541,6 +541,7 @@ function PersonDetailPage() {
   // Sidebar state
   const [filterView, setFilterView] = useState(initialViewMode);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   
   // Filter state
   const [peopleFilters, setPeopleFilters] = useState({
@@ -888,6 +889,11 @@ function PersonDetailPage() {
     setLayoutView('detail');
     setLoading(true);
     
+    // Clear project filters when entering detail view to show all projects
+    if (viewMode === 'people') {
+      setProjectFilters({ search: '', skills: [], sectors: [] });
+    }
+    
     if (viewMode === 'people') {
       const fetchPersonAndList = async () => {
         startLoading();
@@ -1207,37 +1213,57 @@ function PersonDetailPage() {
 
       {/* Mobile: Fixed Top Right - Search, View Toggles, and Hamburger in one unit */}
       <div className="lg:hidden fixed top-2 right-2 z-50 flex items-center gap-2">
-        {layoutView === 'grid' && (
-          <div className="relative">
-            <Input
-              placeholder="Search"
-              value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
-              onChange={(e) => {
-                if (viewMode === 'people') {
-                  setPeopleFilters({ ...peopleFilters, search: e.target.value });
-                } else {
-                  setProjectFilters({ ...projectFilters, search: e.target.value });
-                }
-              }}
-              className="search-input w-32 h-10 bg-white pr-14"
-            />
-            {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
-              <button
-                onClick={() => {
+        <div className="relative">
+          {!searchFocused && (
+            <div className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none">
+              <Search className="w-[25px] h-[25px] text-gray-400" strokeWidth={1.5} />
+            </div>
+          )}
+          <Input
+            value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
+            onChange={(e) => {
+              if (viewMode === 'people') {
+                setPeopleFilters({ ...peopleFilters, search: e.target.value });
+              } else {
+                setProjectFilters({ ...projectFilters, search: e.target.value });
+              }
+            }}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={(e) => {
+              // Use setTimeout to check if focus moved to a filter element
+              setTimeout(() => {
+                const activeElement = document.activeElement;
+                const clickedFilter = activeElement?.closest('aside') || activeElement?.closest('[role="checkbox"]') || activeElement?.closest('label');
+                
+                // Only clear if we didn't click on a filter element
+                if (!clickedFilter && !activeElement?.matches('input')) {
+                  setSearchFocused(false);
                   if (viewMode === 'people') {
                     setPeopleFilters({ ...peopleFilters, search: '' });
                   } else {
                     setProjectFilters({ ...projectFilters, search: '' });
                   }
-                }}
-                className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
-                aria-label="Clear search"
-              >
-                <X className="w-3 h-3 lg:w-4 lg:h-4 text-white search-clear-icon" strokeWidth={2} />
-              </button>
-            )}
-          </div>
-        )}
+                }
+              }, 150);
+            }}
+            className={`search-input w-32 h-10 bg-white ${searchFocused ? 'pl-[10px]' : 'pl-[42px]'} pr-14`}
+          />
+          {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
+            <button
+              onClick={() => {
+                if (viewMode === 'people') {
+                  setPeopleFilters({ ...peopleFilters, search: '' });
+                } else {
+                  setProjectFilters({ ...projectFilters, search: '' });
+                }
+              }}
+              className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
+              aria-label="Clear search"
+            >
+              <X className="w-3 h-3 lg:w-4 lg:h-4 text-white search-clear-icon" strokeWidth={2} />
+            </button>
+          )}
+        </div>
         {/* View Toggle Icons */}
         <div className="view-toggle-container flex items-center gap-1 bg-white rounded-md border h-10 relative" style={{padding: 0}}>
           <div 
@@ -1406,37 +1432,48 @@ function PersonDetailPage() {
           
           {/* Right side: Search and View Icons */}
           <div className="flex items-center gap-3 ml-auto justify-end">
-            {layoutView === 'grid' && (
-              <div className="relative">
-                <Input
-                  placeholder="Search"
-                  value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
-                  onChange={(e) => {
+            <div className="relative">
+              {!searchFocused && (
+                <div className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Search className="w-[25px] h-[25px] text-gray-400" strokeWidth={1.5} />
+                </div>
+              )}
+              <Input
+                value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
+                onChange={(e) => {
+                  if (viewMode === 'people') {
+                    setPeopleFilters({ ...peopleFilters, search: e.target.value });
+                  } else {
+                    setProjectFilters({ ...projectFilters, search: e.target.value });
+                  }
+                }}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => {
+                  setSearchFocused(false);
+                  if (viewMode === 'people') {
+                    setPeopleFilters({ ...peopleFilters, search: '' });
+                  } else {
+                    setProjectFilters({ ...projectFilters, search: '' });
+                  }
+                }}
+                className={`search-input w-48 xl:w-64 h-10 bg-white ${searchFocused ? 'pl-[10px]' : 'pl-[42px]'} pr-14`}
+              />
+              {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
+                <button
+                  onClick={() => {
                     if (viewMode === 'people') {
-                      setPeopleFilters({ ...peopleFilters, search: e.target.value });
+                      setPeopleFilters({ ...peopleFilters, search: '' });
                     } else {
-                      setProjectFilters({ ...projectFilters, search: e.target.value });
+                      setProjectFilters({ ...projectFilters, search: '' });
                     }
                   }}
-                  className="search-input w-48 xl:w-64 h-10 bg-white pr-14"
-                />
-                {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
-                  <button
-                    onClick={() => {
-                      if (viewMode === 'people') {
-                        setPeopleFilters({ ...peopleFilters, search: '' });
-                      } else {
-                        setProjectFilters({ ...projectFilters, search: '' });
-                      }
-                    }}
-                    className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
-                    aria-label="Clear search"
-                  >
-                    <X className="w-3 h-3 lg:w-4 lg:h-4 text-white search-clear-icon" strokeWidth={2} />
-                  </button>
-                )}
-              </div>
-            )}
+                  className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
+                  aria-label="Clear search"
+                >
+                  <X className="w-3 h-3 lg:w-4 lg:h-4 text-white search-clear-icon" strokeWidth={2} />
+                </button>
+              )}
+            </div>
             {/* View Toggle Icons */}
             <div className="view-toggle-container flex items-center gap-1 bg-white rounded-md border h-10 relative" style={{padding: 0}}>
               <div 
@@ -1543,7 +1580,11 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {availablePeopleFilters.skills.length > 0 ? (
                         availablePeopleFilters.skills.map(skill => (
-                        <div key={skill} className="flex items-center space-x-2">
+                        <div 
+                          key={skill} 
+                          className="flex items-center space-x-2"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
                           <Checkbox
                             id={`skill-${skill}`}
                             checked={peopleFilters.skills.includes(skill)}
@@ -1579,7 +1620,11 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {availablePeopleFilters.industries.length > 0 ? (
                         availablePeopleFilters.industries.map(industry => (
-                        <div key={industry} className="flex items-center space-x-2">
+                        <div 
+                          key={industry} 
+                          className="flex items-center space-x-2"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
                           <Checkbox
                             id={`industry-${industry}`}
                             checked={peopleFilters.industries.includes(industry)}
@@ -1658,7 +1703,11 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     <h4 className="text-sm">Technologies</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {availableProjectFilters.skills.map(skill => (
-                        <div key={skill} className="flex items-center space-x-2">
+                        <div 
+                          key={skill} 
+                          className="flex items-center space-x-2"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
                           <Checkbox 
                             id={`proj-skill-${skill}`}
                             checked={projectFilters.skills.includes(skill)}
@@ -1690,7 +1739,11 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                     <h4 className="text-sm">Industries</h4>
                     <div className="space-y-2 max-h-96 overflow-y-auto">
                       {availableProjectFilters.sectors.map(sector => (
-                        <div key={sector} className="flex items-center space-x-2">
+                        <div 
+                          key={sector} 
+                          className="flex items-center space-x-2"
+                          onMouseDown={(e) => e.preventDefault()}
+                        >
                           <Checkbox 
                             id={`proj-sector-${sector}`}
                             checked={projectFilters.sectors.includes(sector)}
@@ -2306,11 +2359,11 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                   )}
 
                   {/* Select Projects - Before Experience Section */}
-                  {person.projects && person.projects.length > 0 && (
+                  {person?.projects && Array.isArray(person.projects) && person.projects.length > 0 && (
                     <div className="mb-4 pb-4 border-b">
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-lg font-bold">Select Projects</h3>
-                        {filteredPersonProjects.length > 3 && (
+                        {filteredPersonProjects && filteredPersonProjects.length > 3 && (
                           <div className="flex gap-2">
                             <button
                               onClick={() => setProjectCarouselIndex(Math.max(0, projectCarouselIndex - 3))}
@@ -2332,7 +2385,7 @@ mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                           </div>
                         )}
                       </div>
-                      {filteredPersonProjects.length === 0 ? (
+                      {!filteredPersonProjects || filteredPersonProjects.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-8" style={{gap: '1rem'}}>
                           <Frown className="text-[#4242ea] error-icon" style={{width: '3rem', height: '3rem'}} strokeWidth={1.5} stroke="#4242ea" />
                           <p className="text-[#4242ea] uppercase" style={{fontFamily: "'Galano Grotesque', sans-serif", fontSize: '1.5rem', fontWeight: 400}}>
