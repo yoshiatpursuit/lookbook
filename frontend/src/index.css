@@ -721,3 +721,12 @@ html.grid-view-page::-webkit-scrollbar {
   color: #4242ea !important; /* Pursuit purple on hover */
 }
 
+@keyframes fadeInText {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+

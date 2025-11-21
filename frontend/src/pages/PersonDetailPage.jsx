@@ -542,6 +542,9 @@ function PersonDetailPage() {
   const [filterView, setFilterView] = useState(initialViewMode);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [searchHovered, setSearchHovered] = useState(false);
+  const searchInputRef = useRef(null);
+  const searchInputRefDesktop = useRef(null);
   
   // Filter state
   const [peopleFilters, setPeopleFilters] = useState({
@@ -1213,13 +1216,64 @@ function PersonDetailPage() {
 
       {/* Mobile: Fixed Top Right - Search, View Toggles, and Hamburger in one unit */}
       <div className="lg:hidden fixed top-2 right-2 z-50 flex items-center gap-2">
-        <div className="relative">
-          {!searchFocused && (
-            <div className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none">
-              <Search className="w-[25px] h-[25px] text-gray-400" strokeWidth={1.5} />
-            </div>
+        <div 
+          className="relative"
+          style={{
+            paddingTop: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '20px' : '0',
+            paddingBottom: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '20px' : '0',
+            marginTop: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '-20px' : '0',
+            marginBottom: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '-20px' : '0',
+            overflow: 'visible'
+          }}
+          onMouseEnter={() => setSearchHovered(true)}
+          onMouseLeave={() => {
+            setSearchHovered(false);
+            setSearchFocused(false);
+            if (searchInputRef.current) {
+              searchInputRef.current.blur();
+            }
+            if (viewMode === 'people') {
+              setPeopleFilters({ ...peopleFilters, search: '' });
+            } else {
+              setProjectFilters({ ...projectFilters, search: '' });
+            }
+          }}
+        >
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300 ease-in-out"
+            style={{ 
+              left: searchHovered && !searchFocused ? '10px' : '7.5px', // Center in square (40px - 25px) / 2 = 7.5px
+              opacity: searchFocused ? 0 : 1,
+              zIndex: 1
+            }}
+          >
+            <Search 
+              className="w-[25px] h-[25px]" 
+              strokeWidth={1.5}
+              style={{ color: '#4242ea' }}
+            />
+          </div>
+          {searchHovered && !searchFocused && (
+            <span 
+              className="absolute pointer-events-none whitespace-nowrap text-base md:text-sm"
+              style={{
+                top: '50%',
+                left: '45px', // 10px (icon left) + 25px (icon width) + 10px (gap) = 45px
+                transform: 'translateY(-50%)',
+                color: '#d1d5db',
+                fontSize: '16px',
+                zIndex: 10,
+                opacity: 0,
+                animation: 'fadeInText 0.1s ease-in-out 0.3s forwards',
+                willChange: 'opacity',
+                display: (viewMode === 'people' ? peopleFilters.search : projectFilters.search) ? 'none' : 'block'
+              }}
+            >
+              Click to search
+            </span>
           )}
           <Input
+            ref={searchInputRef}
             value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
             onChange={(e) => {
               if (viewMode === 'people') {
@@ -1230,32 +1284,63 @@ function PersonDetailPage() {
             }}
             onFocus={() => setSearchFocused(true)}
             onBlur={(e) => {
-              // Use setTimeout to check if focus moved to a filter element
+              // Use setTimeout to check if focus moved to a filter element or clear button
               setTimeout(() => {
                 const activeElement = document.activeElement;
                 const clickedFilter = activeElement?.closest('aside') || activeElement?.closest('[role="checkbox"]') || activeElement?.closest('label');
+                const clickedClearButton = activeElement?.closest('button[aria-label="Clear search"]');
+                
+                // Don't blur if clicking on clear button or filter element
+                if (clickedClearButton) {
+                  return; // Keep focus, don't do anything
+                }
                 
                 // Only clear if we didn't click on a filter element
                 if (!clickedFilter && !activeElement?.matches('input')) {
                   setSearchFocused(false);
+                  setSearchHovered(false);
                   if (viewMode === 'people') {
                     setPeopleFilters({ ...peopleFilters, search: '' });
                   } else {
                     setProjectFilters({ ...projectFilters, search: '' });
                   }
+                } else {
+                  // Even if clicking on filter, close the search bar when focus is lost
+                  setSearchHovered(false);
                 }
               }, 150);
             }}
-            className={`search-input w-32 h-10 bg-white ${searchFocused ? 'pl-[10px]' : 'pl-[42px]'} pr-14`}
+            className={`search-input h-10 bg-white ${
+              searchHovered || searchFocused 
+                ? searchFocused 
+                  ? 'w-32 pl-[10px] pr-14' 
+                  : 'w-32 pl-[42px] pr-14 transition-all duration-300 ease-in-out'
+                : 'w-10 pl-0 pr-0 transition-all duration-300 ease-in-out'
+            }`}
           />
-          {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
+          {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (searchHovered || searchFocused) && (
             <button
-              onClick={() => {
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault(); // Prevent input from losing focus
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // Explicitly keep focus state
+                setSearchFocused(true);
                 if (viewMode === 'people') {
                   setPeopleFilters({ ...peopleFilters, search: '' });
                 } else {
                   setProjectFilters({ ...projectFilters, search: '' });
                 }
+                // Keep focus and set cursor to start position
+                setTimeout(() => {
+                  if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                    searchInputRef.current.setSelectionRange(0, 0);
+                  }
+                }, 0);
               }}
               className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
               aria-label="Clear search"
@@ -1432,13 +1517,63 @@ function PersonDetailPage() {
           
           {/* Right side: Search and View Icons */}
           <div className="flex items-center gap-3 ml-auto justify-end">
-            <div className="relative">
-              {!searchFocused && (
-                <div className="absolute left-[10px] top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Search className="w-[25px] h-[25px] text-gray-400" strokeWidth={1.5} />
-                </div>
+            <div 
+              className="relative"
+              style={{
+                paddingTop: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '10px' : '0',
+                paddingBottom: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '10px' : '0',
+                marginTop: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '-10px' : '0',
+                marginBottom: (searchFocused || (viewMode === 'people' ? peopleFilters.search : projectFilters.search)) ? '-10px' : '0'
+              }}
+              onMouseEnter={() => setSearchHovered(true)}
+              onMouseLeave={() => {
+                setSearchHovered(false);
+                setSearchFocused(false);
+                if (searchInputRefDesktop.current) {
+                  searchInputRefDesktop.current.blur();
+                }
+                if (viewMode === 'people') {
+                  setPeopleFilters({ ...peopleFilters, search: '' });
+                } else {
+                  setProjectFilters({ ...projectFilters, search: '' });
+                }
+              }}
+            >
+              <div 
+                className="absolute top-1/2 -translate-y-1/2 pointer-events-none transition-all duration-300 ease-in-out"
+                style={{ 
+                  left: searchHovered && !searchFocused ? '10px' : '7.5px', // Center in square (40px - 25px) / 2 = 7.5px
+                  opacity: searchFocused ? 0 : 1,
+                  zIndex: 1
+                }}
+              >
+                <Search 
+                  className="w-[25px] h-[25px]" 
+                  strokeWidth={1.5}
+                  style={{ color: '#4242ea' }}
+                />
+              </div>
+              {searchHovered && !searchFocused && (
+                <span 
+                  className="absolute pointer-events-none whitespace-nowrap text-base md:text-sm"
+                  style={{
+                    top: '50%',
+                    left: '45px', // 10px (icon left) + 25px (icon width) + 10px (gap) = 45px
+                    transform: 'translateY(-50%)',
+                    color: '#d1d5db',
+                    fontSize: '16px',
+                    zIndex: 10,
+                    opacity: 0,
+                    animation: 'fadeInText 0.1s ease-in-out 0.3s forwards',
+                    willChange: 'opacity',
+                    display: (viewMode === 'people' ? peopleFilters.search : projectFilters.search) ? 'none' : 'block'
+                  }}
+                >
+                  Click to search
+                </span>
               )}
               <Input
+                ref={searchInputRefDesktop}
                 value={viewMode === 'people' ? peopleFilters.search : projectFilters.search}
                 onChange={(e) => {
                   if (viewMode === 'people') {
@@ -1448,24 +1583,57 @@ function PersonDetailPage() {
                   }
                 }}
                 onFocus={() => setSearchFocused(true)}
-                onBlur={() => {
-                  setSearchFocused(false);
-                  if (viewMode === 'people') {
-                    setPeopleFilters({ ...peopleFilters, search: '' });
-                  } else {
-                    setProjectFilters({ ...projectFilters, search: '' });
-                  }
-                }}
-                className={`search-input w-48 xl:w-64 h-10 bg-white ${searchFocused ? 'pl-[10px]' : 'pl-[42px]'} pr-14`}
-              />
-              {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (
-                <button
-                  onClick={() => {
+                onBlur={(e) => {
+                  // Use setTimeout to check if focus moved to clear button
+                  setTimeout(() => {
+                    const activeElement = document.activeElement;
+                    const clickedClearButton = activeElement?.closest('button[aria-label="Clear search"]');
+                    
+                    // Don't blur if clicking on clear button
+                    if (clickedClearButton) {
+                      return; // Keep focus, don't do anything
+                    }
+                    
+                    setSearchFocused(false);
+                    setSearchHovered(false);
                     if (viewMode === 'people') {
                       setPeopleFilters({ ...peopleFilters, search: '' });
                     } else {
                       setProjectFilters({ ...projectFilters, search: '' });
                     }
+                  }, 150);
+                }}
+                className={`search-input h-10 bg-white ${
+                  searchHovered || searchFocused 
+                    ? searchFocused 
+                      ? 'w-48 xl:w-64 pl-[10px] pr-14' 
+                      : 'w-48 xl:w-64 pl-[42px] pr-14 transition-all duration-300 ease-in-out'
+                    : 'w-10 pl-0 pr-0 transition-all duration-300 ease-in-out'
+                }`}
+              />
+              {(viewMode === 'people' ? peopleFilters.search : projectFilters.search) && (searchHovered || searchFocused) && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // Prevent input from losing focus
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Explicitly keep focus state
+                    setSearchFocused(true);
+                    if (viewMode === 'people') {
+                      setPeopleFilters({ ...peopleFilters, search: '' });
+                    } else {
+                      setProjectFilters({ ...projectFilters, search: '' });
+                    }
+                    // Keep focus and set cursor to start position
+                    setTimeout(() => {
+                      if (searchInputRefDesktop.current) {
+                        searchInputRefDesktop.current.focus();
+                        searchInputRefDesktop.current.setSelectionRange(0, 0);
+                      }
+                    }, 0);
                   }}
                   className="absolute right-[10px] top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 rounded-full border-[1.5px] border-white flex items-center justify-center search-clear-button transition-all"
                   aria-label="Clear search"
